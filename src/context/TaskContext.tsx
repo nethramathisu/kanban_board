@@ -4,39 +4,32 @@ import type { Task } from "../types/task";
 interface TaskContextType {
   tasks: Task[];
   addTask: (task: Task) => void;
-  updateTask: (task: Task) => void;
+  updateTask: (id: string, updatedFields: Partial<Task>) => void;
   deleteTask: (id: string) => void;
 }
 
 const TaskContext = createContext<TaskContextType | null>(null);
 
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const saved = localStorage.getItem("tasks");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // Load from localStorage
-  useEffect(() => {
-    const data = localStorage.getItem("tasks");
-    if (data) setTasks(JSON.parse(data));
-  }, []);
-
-  // Save to localStorage
+  // 🔹 Save tasks to localStorage on every change
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (task: Task) => {
-    setTasks((prev) => [...prev, task]);
-  };
+  const addTask = (task: Task) => setTasks((prev) => [...prev, task]);
 
-  const updateTask = (updated: Task) => {
+  const updateTask = (id: string, updatedFields: Partial<Task>) =>
     setTasks((prev) =>
-      prev.map((task) => (task.id === updated.id ? updated : task))
+      prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t))
     );
-  };
 
-  const deleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-  };
+  const deleteTask = (id: string) =>
+    setTasks((prev) => prev.filter((t) => t.id !== id));
 
   return (
     <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask }}>
@@ -47,6 +40,6 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useTasks = () => {
   const context = useContext(TaskContext);
-  if (!context) throw new Error("useTasks must be used inside provider");
+  if (!context) throw new Error("useTasks must be used inside TaskProvider");
   return context;
 };

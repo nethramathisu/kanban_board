@@ -10,17 +10,36 @@ interface Props {
 
 const Column = ({ title, status, tasks }: Props) => {
   const { setNodeRef } = useDroppable({
-    id: status, // VERY IMPORTANT
+    id: status, // Important for DnD
   });
 
-  return (
-    <div ref={setNodeRef} className="bg-gray-100 p-4 rounded w-80 min-h-[300px]">
-      <h2 className="font-bold mb-4">{title}</h2>
+  // Optional: color border for status
+  const getStatusColor = () => {
+    if (status === "todo") return "border-t-4 border-blue-400";
+    if (status === "inprogress") return "border-t-4 border-yellow-400";
+    return "border-t-4 border-green-400"; // done
+  };
 
-      <div className="space-y-2">
+  return (
+    <div
+      ref={setNodeRef}
+      className={`bg-white p-5 rounded-2xl w-80 min-h-[350px] shadow-md ${getStatusColor()} transition-all`}
+    >
+      {/* Column Title */}
+      <h2 className="font-bold text-gray-800 text-lg mb-4 text-center">{title}</h2>
+
+      {/* Task List */}
+      <div className="space-y-3">
         {tasks.map((task) => (
           <TaskCard key={task.id} task={task} />
         ))}
+
+        {/* Empty state */}
+        {tasks.length === 0 && (
+          <p className="text-gray-400 text-sm italic text-center">
+            No tasks here yet
+          </p>
+        )}
       </div>
     </div>
   );
